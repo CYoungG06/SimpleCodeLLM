@@ -42,4 +42,9 @@ class Config:
     
     def get_model(self, provider: str) -> Optional[str]:
         return self.get(f"llm.{provider}.model")
+
+
+    def get_search_key(self) -> Optional[str]:
+        return self.get("tool.search.api_key")
+        
     

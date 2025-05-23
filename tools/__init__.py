@@ -1,13 +1,12 @@
-# 导入装饰器系统
-from .decorator import get_registered_tools, get_tool_schemas
+from .decorator import get_registered_tools, get_tool_schemas, get_async_tools
 
-# 导入所有工具模块，确保装饰器被执行
 from .file import *
 from .command import *
 from .dir import *
 from .execute import *
+from .browser import *
+from .search import *
 
-# 获取注册的工具和工具模式
 available_functions = get_registered_tools()
 all_tools_schemas = get_tool_schemas()
 

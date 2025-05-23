@@ -36,7 +36,7 @@ def execute_shell_command(command: str) -> str:
             "success": True,
             "command": command,
             "returncode": process.returncode,
-            "workspace_dir": workspace_dir,  # 返回工作空间目录信息，便于调试
+            "workspace_dir": workspace_dir,
             "stdout": process.stdout.strip(),
             "stderr": process.stderr.strip()
         })

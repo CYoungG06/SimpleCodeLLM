@@ -2,10 +2,6 @@ import re
 import json
 
 
-
-
-
-
 def extract_json(content):
     pattern = r'```json\s*({.*?})\s*```'
     match = re.search(pattern, content, re.DOTALL)
