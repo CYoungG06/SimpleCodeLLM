@@ -1,0 +1,19 @@
+llm:
+  claude:
+    api_key:
+    base_url:
+    model:
+
+  qwen:
+    api_key:
+    base_url:
+    model:
+
+  gemini:
+    api_key:
+    base_url:
+    model:
+    
+tool:
+  search:
+    api_key:
