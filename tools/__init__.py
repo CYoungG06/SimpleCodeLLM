@@ -6,6 +6,7 @@ from .dir import *
 from .execute import *
 from .browser import *
 from .search import *
+from .audio import *
 
 available_functions = get_registered_tools()
 all_tools_schemas = get_tool_schemas()

@@ -122,35 +122,40 @@ async def browser_use(
     finally:
         try:
             # Close browser context first, then browser
-            if browser_context:
+            if 'browser_context' in locals() and browser_context:
                 try:
                     await browser_context.close()
                 except Exception:
                     pass  # Ignore context close errors
             
-            if browser:
+            if 'browser' in locals() and browser:
                 try:
                     await browser.close()
                 except Exception:
                     pass  # Ignore browser close errors
             
+            # Use a small delay to allow cleanup
+            import asyncio
             import gc
-            import time
             
-            time.sleep(0.5)
+            try:
+                await asyncio.sleep(0.1)  # Use async sleep instead of time.sleep
+            except:
+                pass
             
             gc.collect()
             print("Browser resources cleaned up")
             
-            browser = None
-            browser_context = None
+            # Clear references
+            if 'browser' in locals():
+                browser = None
+            if 'browser_context' in locals():
+                browser_context = None
             gc.collect()
         except Exception as e:
             print(f"Error during browser cleanup: {e}")
             try:
                 import gc
-                browser = None
-                browser_context = None
                 gc.collect()
                 print("Forced final cleanup")
             except:

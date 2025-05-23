@@ -51,7 +51,15 @@ def web_search(
         "Content-Type": "application/json"
     }
     
-    response = requests.post(url, json=payload, headers=headers)
-    response.raise_for_status()
-
-    return response.text
+    try:
+        response = requests.post(url, json=payload, headers=headers)
+        response.raise_for_status()
+        return response.text
+    except requests.exceptions.HTTPError as e:
+        error_msg = f"HTTP Error {response.status_code}: {response.text}"
+        print(f"Tavily API Error: {error_msg}")
+        return f'{{"error": "Search API error: {error_msg}"}}'
+    except Exception as e:
+        error_msg = f"Search request failed: {str(e)}"
+        print(f"Search Error: {error_msg}")
+        return f'{{"error": "{error_msg}"}}'

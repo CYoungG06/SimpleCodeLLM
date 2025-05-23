@@ -23,9 +23,7 @@ model = config.get_model(provider)
 # Then run it with command tool, tell me the output.
 # """
 
-user_prompt = """
-What's the Top 1 trending model on huggingface.co?
-"""
+user_prompt = "Use density measures from the chemistry materials licensed by Marisa Alviar-Agnew & Henry Agnew under the CK-12 license in LibreText's Introductory Chemistry materials as compiled 08/21/2023.\n\nI have a gallon of honey and a gallon of mayonnaise at 25C. I remove one cup of honey at a time from the gallon of honey. How many times will I need to remove a cup to have the honey weigh less than the mayonaise? Assume the containers themselves weigh the same."
 
 # user_prompt = """
 # What tools do you have?
@@ -33,6 +31,7 @@ What's the Top 1 trending model on huggingface.co?
 
 
 system_prompt = """
+You are a helpful assistant, and you have access to a set of tools. Your task is to try your best to complete the user's request.
 There will be multiple turns of interaction with tools invoking, observations and reasoning for completing the task. And only when you believe the task is complete, include a JSON marker within the ```json block in your response like this:
 ```json
 {"task_complete": true, "message": "The answer or summary of the task"}
@@ -46,7 +45,7 @@ messages = [
     },
     {
         "role": "user", 
-        "content": user_prompt
+        "content": f"**User request**: {user_prompt}"
     }
 ]
 
@@ -80,7 +79,7 @@ async def execute_tool_call(tool_call):
         return json.dumps({"error": error_msg})
 
 
-max_iterations = 6
+max_iterations = 16
 iteration = 0
 task_complete = False
 task_message = ""
