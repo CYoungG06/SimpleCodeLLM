@@ -1,0 +1,16 @@
+config.yaml
+
+.__pycache__
+
+workspace/
+
+.DS_Store
+
+__pycache__
+
+.e
+
+*.DS_Store
+
+*.pyc
+
