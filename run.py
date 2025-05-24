@@ -6,6 +6,10 @@ from openai import OpenAI
 from tools import all_tools_schemas, available_functions, get_async_tools
 from config import Config
 from utils import extract_json
+from logger import MessageLogger
+from time import time
+
+current_time = time()
 
 provider = "gemini"
 config = Config()
@@ -17,25 +21,33 @@ client = OpenAI(
 
 model = config.get_model(provider)
 
+# Initialize message logger
+logger = MessageLogger(config)
 
-# user_prompt = """
-# Write a python code of quick sort in a .py file with several test cases to verify the correctness of the code.
-# Then run it with command tool, tell me the output.
-# """
+user_prompt = """
+Go to huggingface.co to search qwen3 model series and make a brief summary.
+"""
 
-user_prompt = "Use density measures from the chemistry materials licensed by Marisa Alviar-Agnew & Henry Agnew under the CK-12 license in LibreText's Introductory Chemistry materials as compiled 08/21/2023.\n\nI have a gallon of honey and a gallon of mayonnaise at 25C. I remove one cup of honey at a time from the gallon of honey. How many times will I need to remove a cup to have the honey weigh less than the mayonaise? Assume the containers themselves weigh the same."
+# user_prompt = "What integer-rounded percentage of the total length of the harlequin shrimp recorded in Omar Valencfia-Mendez 2017 paper was the sea star fed to the same type of shrimp in G. Curt Fiedler's 2002 paper?"
 
 # user_prompt = """
 # What tools do you have?
 # """
 
+# user_prompt = "Search for some papers about LLM / Agent / RL recently (about May 2025) published on arxiv. Then find the main points of the papers through their abstracts. Finally summarize them with the style of the red note (xiaohongshu)."
 
 system_prompt = """
+Current time: {current_time}
+---
 You are a helpful assistant, and you have access to a set of tools. Your task is to try your best to complete the user's request.
-There will be multiple turns of interaction with tools invoking, observations and reasoning for completing the task. And only when you believe the task is complete, include a JSON marker within the ```json block in your response like this:
+What you should do FIRST is to make a high-level plan for the task to instruct your following actions, but it's totally OK that you can adjust it during the process of the task, finally make sure you have completed the task.
+
+For completing the task, there will be multiple turns of interaction with tool invoking, observation and reasoning for each turn. And only when you believe the task is complete, include a JSON marker within the ```json block in your response like this:
 ```json
 {"task_complete": true, "message": "The answer or summary of the task"}
 ```
+For the task that requires a certain answer, you should finally give the answer in the "message" field above.
+For the task that requires non-specific answer but requires open-ended text generating, you should finally give the generated text according to the user's request and the additional information you have learned from the tools in the "message" field above.
 """
 
 messages = [
@@ -48,6 +60,10 @@ messages = [
         "content": f"**User request**: {user_prompt}"
     }
 ]
+
+# Log session start
+logger.log_session_start(user_prompt, system_prompt, provider, model)
+print(f"📝 Session started with ID: {logger.get_session_id()}")
 
 
 async def execute_tool_call(tool_call):
@@ -72,6 +88,10 @@ async def execute_tool_call(tool_call):
             result = function_to_call(**function_args)
         
         print(f"\nTool execution result: 📝 {result}\n")
+        
+        # Log tool call and result
+        logger.log_tool_call(function_name, function_args, result)
+        
         return result
     except Exception as e:
         error_msg = f"Error executing {function_name}: {str(e)}"
@@ -98,6 +118,13 @@ while iteration < max_iterations and not task_complete:
     
     response_message = response.choices[0].message
     messages.append(response_message)
+    
+    # Log the model response
+    logger.log_message({
+        "role": response_message.role,
+        "content": response_message.content,
+        "tool_calls": [{"function": {"name": tc.function.name, "arguments": tc.function.arguments}} for tc in (response_message.tool_calls or [])]
+    }, "model_response")
     
     json_data = extract_json(response_message.content or "")
     if json_data:
@@ -159,6 +186,12 @@ while iteration < max_iterations and not task_complete:
                 "role": "user",
                 "content": error_feedback
             })
+            
+            # Log error feedback
+            logger.log_message({
+                "role": "user",
+                "content": error_feedback
+            }, "error_feedback")
     else:
         if not task_complete:
             print("Model did not request tool calls, and did not indicate task completion.")
@@ -170,7 +203,16 @@ while iteration < max_iterations and not task_complete:
                 "role": "user",
                 "content": feedback
             })
+            
+            # Log feedback message
+            logger.log_message({
+                "role": "user",
+                "content": feedback
+            }, "system_feedback")
 
+
+# Log session end
+logger.log_session_end(task_complete, task_message, iteration)
 
 if task_complete:
     print("\n=== Task completed successfully! ===\n")

@@ -17,3 +17,10 @@ llm:
 tool:
   search:
     api_key:
+
+logging:
+  enabled: true
+  save_path: "logs/"
+  format: "json"
+  include_tool_calls: true
+  include_responses: true
